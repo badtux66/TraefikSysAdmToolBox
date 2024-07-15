@@ -1,0 +1,76 @@
+[http]
+
+  [http.routers]
+    [http.routers.zabbix]
+      rule = "Host(`zabbix.local`)"
+      entryPoints = ["websecure"]
+      service = "zabbix"
+      [http.routers.zabbix.tls]
+        certResolver = "le"
+
+    [http.routers.glpi]
+      rule = "Host(`glpi.local`)"
+      entryPoints = ["websecure"]
+      service = "glpi"
+      [http.routers.glpi.tls]
+        certResolver = "le"
+
+    [http.routers.traefik]
+      rule = "Host(`traefik.local`)"
+      entryPoints = ["websecure"]
+      service = "api@internal"
+      [http.routers.traefik.tls]
+        certResolver = "le"
+
+    [http.routers.portainer]
+      rule = "Host(`portainer.local`)"
+      entryPoints = ["websecure"]
+      service = "portainer"
+      [http.routers.portainer.tls]
+        certResolver = "le"
+
+    [http.routers.apache2]
+      rule = "Host(`tools.local`)"
+      entryPoints = ["websecure"]
+      service = "apache2"
+      [http.routers.apache2.tls]
+        certResolver = "le"
+
+    [http.routers.prometheus]
+      rule = "Host(`prometheus.local`)"
+      entryPoints = ["websecure"]
+      service = "prometheus"
+      [http.routers.prometheus.tls]
+        certResolver = "le"
+
+    [http.routers.grafana]
+      rule = "Host(`grafana.local`)"
+      entryPoints = ["websecure"]
+      service = "grafana"
+      [http.routers.grafana.tls]
+        certResolver = "le"
+
+  [http.services]
+    [http.services.zabbix.loadBalancer]
+      [[http.services.zabbix.loadBalancer.servers]]
+        url = "http://zabbix-web-nginx-mysql:8080"
+
+    [http.services.glpi.loadBalancer]
+      [[http.services.glpi.loadBalancer.servers]]
+        url = "http://glpi:80"
+
+    [http.services.portainer.loadBalancer]
+      [[http.services.portainer.loadBalancer.servers]]
+        url = "http://portainer:9000"
+
+    [http.services.apache2.loadBalancer]
+      [[http.services.apache2.loadBalancer.servers]]
+        url = "http://apache2-webserver:80"
+
+    [http.services.prometheus.loadBalancer]
+      [[http.services.prometheus.loadBalancer.servers]]
+        url = "http://prometheus:9090"
+
+    [http.services.grafana.loadBalancer]
+      [[http.services.grafana.loadBalancer.servers]]
+        url = "http://grafana:3000"

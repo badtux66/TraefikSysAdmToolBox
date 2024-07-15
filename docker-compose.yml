@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.5
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8090:8090"
+      - "8091:8091"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/etc/traefik/traefik.toml
+      - ./dynamic.toml:/etc/traefik/dynamic/dynamic.toml
+      - ./certs:/etc/traefik/certs
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.local`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.tls.certresolver=le"
+
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb-server
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - traefik-network
+
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:alpine-7.0-latest
+    container_name: zabbix-server-mysql
+    restart: unless-stopped
+    environment:
+      DB_SERVER_HOST: mariadb-server
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+      MYSQL_ROOT_PASSWORD: rootpassword
+    networks:
+      - traefik-network
+    ports:
+      - "10051:10051"
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:alpine-7.0-latest
+    container_name: zabbix-web-nginx-mysql
+    restart: unless-stopped
+    environment:
+      ZBX_SERVER_HOST: zabbix-server-mysql
+      DB_SERVER_HOST: mariadb-server
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+      MYSQL_ROOT_PASSWORD: rootpassword
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.zabbix.rule=Host(`zabbix.local`)"
+      - "traefik.http.routers.zabbix.entrypoints=websecure"
+      - "traefik.http.routers.zabbix.tls=true"
+    ports:
+      - "8082:8080"
+
+  zabbix-java-gateway:
+    image: zabbix/zabbix-java-gateway:alpine-7.0-latest
+    container_name: zabbix-java-gateway
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    ports:
+      - "10052:10052"
+
+  glpi:
+    image: diouxx/glpi
+    container_name: glpi
+    restart: unless-stopped
+    environment:
+      DB_HOST: mariadb-server
+      DB_USER: glpi_user
+      DB_PASSWORD: glpi_password
+      DB_NAME: glpidb
+      MYSQL_ROOT_PASSWORD: rootpassword
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.glpi.rule=Host(`glpi.local`)"
+      - "traefik.http.routers.glpi.entrypoints=websecure"
+      - "traefik.http.routers.glpi.tls=true"
+    ports:
+      - "8081:80"
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.local`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls=true"
+    ports:
+      - "9002:9000"
+      - "9443:9443"
+
+  apache2-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Make sure this is the correct path to your Dockerfile
+    container_name: apache2-webserver
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apache2.rule=Host(`tools.local`)"
+      - "traefik.http.routers.apache2.entrypoints=websecure"
+      - "traefik.http.routers.apache2.tls=true"
+    ports:
+      - "8083:80"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.local`)"
+      - "traefik.http.routers.prometheus.entrypoints=websecure"
+      - "traefik.http.routers.prometheus.tls=true"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.local`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls=true"
+    ports:
+      - "3000:3000"
+
+volumes:
+  portainer_data:
+
+networks:
+  traefik-network:
+    external: true

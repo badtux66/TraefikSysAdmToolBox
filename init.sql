@@ -1,0 +1,10 @@
+CREATE DATABASE IF NOT EXISTS zabbix CHARACTER SET utf8 COLLATE utf8_bin;
+CREATE DATABASE IF NOT EXISTS glpi CHARACTER SET utf8 COLLATE utf8_bin;
+
+CREATE USER 'zabbix'@'%' IDENTIFIED BY 'zabbix_pwd';
+GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'%';
+
+CREATE USER 'glpi_user'@'%' IDENTIFIED BY 'glpi_password';
+GRANT ALL PRIVILEGES ON glpi.* TO 'glpi_user'@'%';
+
+FLUSH PRIVILEGES;
