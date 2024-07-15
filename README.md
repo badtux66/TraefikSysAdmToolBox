@@ -416,6 +416,12 @@ ssh -D 1080 username@remote_server_ip
 ## Usage
 - Go to https://tools.local to access the dashboard
 ## Features
+- **Traefik Integration**: Easily manage and configure Traefik as a reverse proxy and load balancer for your services.
+- **Docker Support**: Leverage Docker for containerized deployments, ensuring consistent environments and simplified management.
+- **Automated Setup**: Scripted setup process for quick and seamless installation and configuration.
+- **Customizable Configuration**: Flexibility to tailor configurations to meet specific requirements and use cases.
+- **Scalable**: Suitable for small to large-scale deployments, accommodating growing infrastructure needs.
+- **Secure**: Implements best practices for security, including SSL termination and authentication mechanisms.
 
 ## Contributing
 
