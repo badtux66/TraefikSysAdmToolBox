@@ -342,7 +342,7 @@ such that:
 127.0.0.1 portainer.local
 127.0.0.1 tools.local
 127.0.0.1 prometheus.local
-127.0.0.1 graphana.local
+127.0.0.1 grafana.local
 ```
 
 ### GLPI Configuration
